@@ -38,12 +38,12 @@ light:
     restore_mode: ALWAYS_OFF
 
   # Button LED (UP/Down position, no brightness control)
-  - platform: status_led
+  - platform: monochromatic
     name: "${device_name} Button Status LED"
     id: button_led0
     output: button_led0_gpio
     restore_mode: ALWAYS_OFF
-    internal: true
+    internal: false
 
   - platform: monochromatic
     name: "${device_name} Button LED1"
