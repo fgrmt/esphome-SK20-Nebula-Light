@@ -31,6 +31,7 @@ light:
       - strobe:
       - pulse:
           transition_length: 30s
+          update_interval: 30s
           min_brightness: 5%
           max_brightness: 100%
     on_turn_on:
