@@ -34,6 +34,44 @@ light:
           update_interval: 30s
           min_brightness: 5%
           max_brightness: 100%
+      - strobe:
+          name: Galaxy Travel
+          colors:
+            - state: true
+              brightness: 100%
+              red: 100%
+              green: 100%
+              blue: 100%
+              duration: 12s
+              transition_length: 12s
+            - state: true
+              brightness: 100%
+              red: 100%
+              green: 0%
+              blue: 0%
+              duration: 12s
+              transition_length: 12s
+            - state: true
+              brightness: 100%
+              red: 0%
+              green: 0%
+              blue: 100%
+              duration: 12s
+              transition_length: 12s
+            - state: true
+              brightness: 100%
+              red: 0%
+              green: 100%
+              blue: 0%
+              duration: 12s
+              transition_length: 12s
+            - state: true
+              brightness: 100%
+              red: 100%
+              green: 0%
+              blue: 0%
+              duration: 12s
+              transition_length: 12s
     on_turn_on:
       - script.execute: script_sync_state
     on_turn_off:
