@@ -5,6 +5,10 @@
 # - https://github.com/fonix232/esphome_nebula_light
 # - https://github.com/kireque/esphome_nebula_light/issues/8
 
+substitutions:
+  # Lasing threshold — measure per unit, override from the device file
+  laser_min_power: "32%"
+
 light:
   - platform: rgb
     name: "${device_name} Light"
@@ -35,6 +39,8 @@ light:
     icon: mdi:laser-pointer
     id: laser
     output: laser_pwm
+    # Slider travel spread across the usable range
+    gamma_correct: 2.0
     restore_mode: ALWAYS_OFF
 
   # Button LED (UP/Down position, no brightness control)
@@ -103,6 +109,9 @@ output:
     id: laser_pwm
     pin: P8
     inverted: true
+    # Lowest duty cycle with reproducible intensity (measured on this unit)
+    min_power: ${laser_min_power}
+    zero_means_zero: true
 
   - platform: libretiny_pwm
     id: motor_pwm
