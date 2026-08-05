@@ -170,26 +170,25 @@ binary_sensor:
       inverted: true
     name: "${device_name} Button"
 
-    # Change the scene on short press/click
+    # Short press toggles the device, restoring the last active state
     on_click:
+      min_length: 50ms
+      max_length: 900ms
       then:
-        # Do not switch the scene when all the components (switch_main) are
-        # turned off. Allow the scene switching only when the switch_main is
-        # on. When the switch is off, just turn it on.
-        - if:
-            condition:
-              - switch.is_on: switch_main
-            then:
-              - select.next: select_scene
-            else:
-              - switch.turn_on: switch_main
+        - switch.toggle: switch_main
 
-    # Turn off after a button long press
+    # Long press cycles through the scenes, but only while something is on
     on_multi_click:
       - timing:
-          - on for at least 1s
+          - ON for at least 1s
         then:
-          - switch.turn_off: switch_main
+          - if:
+              condition:
+                - switch.is_on: switch_main
+              then:
+                - select.next: select_scene
+              else:
+                - switch.turn_on: switch_main
 
 globals:
   - id: saved_rgb_on
