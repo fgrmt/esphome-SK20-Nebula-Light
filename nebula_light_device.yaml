@@ -125,7 +125,8 @@ output:
   - platform: libretiny_pwm
     id: motor_pwm
     pin: P6
-    min_power: 15%
+    # Measured stall threshold is around 17.5%, plus margin for wear and temperature
+    min_power: 19%
     zero_means_zero: true
 
   - platform: gpio
