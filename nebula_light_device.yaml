@@ -51,13 +51,15 @@ light:
     output: button_led1_pwm
     restore_mode: ALWAYS_OFF
 
-fan:
-  platform: speed
-  name: "${device_name} Motor"
-  icon: mdi:rotate-right
-  id: motor
-  output: motor_pwm
-  restore_mode: ALWAYS_OFF
+  - platform: monochromatic
+    name: "${device_name} Rotation"
+    icon: mdi:rotate-right
+    id: motor
+    output: motor_pwm
+    # Speed must map linearly to PWM duty cycle
+    gamma_correct: 1.0
+    default_transition_length: 0s
+    restore_mode: ALWAYS_OFF
 
 # The template switch representing the device is currently active (laser/light
 # or motor is ON).
@@ -65,7 +67,7 @@ switch:
   - platform: template
     name: "${device_name} Main Switch"
     id: switch_main
-    lambda: "return (id(motor).state || id(laser).current_values.is_on() || id(rgb_light).current_values.is_on());"
+    lambda: "return (id(motor).current_values.is_on() || id(laser).current_values.is_on() || id(rgb_light).current_values.is_on());"
 
     # Turn on using the white scene
     turn_on_action:
@@ -75,7 +77,7 @@ switch:
 
     # Completely turn off the laser, light, motor and button LED
     turn_off_action:
-      - fan.turn_off: motor
+      - light.turn_off: motor
       - light.turn_off: laser
       - light.turn_off: rgb_light
       - light.turn_off: button_led0
@@ -106,6 +108,7 @@ output:
     id: motor_pwm
     pin: P6
     min_power: 15%
+    zero_means_zero: true
 
   - platform: gpio
     id: button_led0_gpio
@@ -190,9 +193,9 @@ select:
             - light.turn_on:
                 id: laser
                 brightness: 60%
-            - fan.turn_on:
+            - light.turn_on:
                 id: motor
-                speed: 40
+                brightness: 40%
 
       # [INDEX=1]: Scene - Blue
       - if:
@@ -208,9 +211,9 @@ select:
             - light.turn_on:
                 id: laser
                 brightness: 60%
-            - fan.turn_on:
+            - light.turn_on:
                 id: motor
-                speed: 40
+                brightness: 40%
 
       # [INDEX=2]: Scene - Green
       - if:
@@ -226,9 +229,9 @@ select:
             - light.turn_on:
                 id: laser
                 brightness: 60%
-            - fan.turn_on:
+            - light.turn_on:
                 id: motor
-                speed: 40
+                brightness: 40%
 
       # [INDEX=3]: Scene - White
       - if:
@@ -244,9 +247,9 @@ select:
             - light.turn_on:
                 id: laser
                 brightness: 100%
-            - fan.turn_on:
+            - light.turn_on:
                 id: motor
-                speed: 50
+                brightness: 50%
 
       # [INDEX=4]: Scene - Dimmed
       - if:
@@ -262,6 +265,6 @@ select:
             - light.turn_on:
                 id: laser
                 brightness: 30%
-            - fan.turn_on:
+            - light.turn_on:
                 id: motor
-                speed: 10
+                brightness: 10%
