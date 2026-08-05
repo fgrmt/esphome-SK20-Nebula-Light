@@ -1,5 +1,7 @@
 substitutions:
   device_name: "Star Projector"
+  # Lasing threshold — measure on your unit and override here
+  # laser_min_power: "32%"
 
 esphome:
   name: "nebula"
@@ -10,7 +12,7 @@ wifi:
   power_save_mode: none
 
   ap:
-    ssid: "Fallback AP"
+    ssid: "Nebula Fallback AP"
     password: !secret wifi_fallback_password
 
 captive_portal:
@@ -36,6 +38,6 @@ web_server:
 
 packages:
   remote_package:
-    url: https://github.com/M4GNV5/esphome-SK20-Nebula-Light.git
+    url: https://github.com/fgrmt/esphome-SK20-Nebula-Light.git
     ref: master
     files: [platform_bk72xx.yaml, nebula_light_device.yaml]
