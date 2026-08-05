@@ -33,6 +33,10 @@ light:
           transition_length: 30s
           min_brightness: 5%
           max_brightness: 100%
+    on_turn_on:
+      - script.execute: script_sync_state
+    on_turn_off:
+      - script.execute: script_sync_state
 
   - platform: monochromatic
     name: "${device_name} Laser"
@@ -42,6 +46,10 @@ light:
     # Slider travel spread across the usable range
     gamma_correct: 2.0
     restore_mode: ALWAYS_OFF
+    on_turn_on:
+      - script.execute: script_sync_state
+    on_turn_off:
+      - script.execute: script_sync_state
 
   # Button LED (UP/Down position, no brightness control)
   - platform: binary
@@ -66,28 +74,43 @@ light:
     gamma_correct: 1.0
     default_transition_length: 0s
     restore_mode: ALWAYS_OFF
+    on_turn_on:
+      - script.execute: script_sync_state
+    on_turn_off:
+      - script.execute: script_sync_state
 
-# The template switch representing the device is currently active (laser/light
-# or motor is ON).
+# The template switch representing the device is currently active: a light or
+# the laser is projecting something. The motor alone does not count.
 switch:
   - platform: template
     name: "${device_name} Main Switch"
     id: switch_main
-    lambda: "return (id(motor).current_values.is_on() || id(laser).current_values.is_on() || id(rgb_light).current_values.is_on());"
+    # Single definition of "active": the motor alone projects nothing
+    lambda: "return (id(rgb_light).remote_values.is_on() || id(laser).remote_values.is_on());"
 
-    # Turn on using the white scene
+    # Restore the last active state, component by component
     turn_on_action:
-      - select.set_index:
-          id: select_scene
-          index: 3
+      - if:
+          condition:
+            lambda: "return id(saved_rgb_on);"
+          then:
+            - light.turn_on: rgb_light
+      - if:
+          condition:
+            lambda: "return id(saved_laser_on);"
+          then:
+            - light.turn_on: laser
+      - if:
+          condition:
+            lambda: "return id(saved_motor_on);"
+          then:
+            - light.turn_on: motor
+      - light.turn_on: button_led0
 
-    # Completely turn off the laser, light, motor and button LED
+    # Motor and button LED are turned off by script_sync_state
     turn_off_action:
-      - light.turn_off: motor
       - light.turn_off: laser
       - light.turn_off: rgb_light
-      - light.turn_off: button_led0
-      - script.stop: script_turn_off_timer
 
 output:
   - platform: libretiny_pwm
@@ -168,13 +191,52 @@ binary_sensor:
         then:
           - switch.turn_off: switch_main
 
-# Turn off the light, laser and motor automatically after a specified delay
+globals:
+  - id: saved_rgb_on
+    type: bool
+    restore_value: false
+    initial_value: 'true'
+
+  - id: saved_laser_on
+    type: bool
+    restore_value: false
+    initial_value: 'true'
+
+  - id: saved_motor_on
+    type: bool
+    restore_value: false
+    initial_value: 'true'
+
 script:
-  - id: script_turn_off_timer
+  # Single mechanism driving every side effect of the device going dark.
+  #
+  # While the device is active, keep a snapshot of which components are on. Once
+  # it goes dark the snapshot stops updating, so it holds the last active state
+  # and the main switch can restore it verbatim.
+  #
+  # The motor is deliberately absent from the main switch lambda, so turning it
+  # off here cannot change the switch state and cannot re-enter this script.
+  - id: script_sync_state
     mode: restart
     then:
-      - delay: 1h
-      - switch.turn_off: switch_main
+      # Debounce: several components usually change within one action sequence
+      - delay: 500ms
+      - if:
+          condition:
+            - switch.is_on: switch_main
+          then:
+            - lambda: |-
+                id(saved_rgb_on) = id(rgb_light).remote_values.is_on();
+                id(saved_laser_on) = id(laser).remote_values.is_on();
+                id(saved_motor_on) = id(motor).remote_values.is_on();
+          else:
+            # Nothing is being projected: the motor would only wear out
+            - if:
+                condition:
+                  lambda: "return id(motor).remote_values.is_on();"
+                then:
+                  - light.turn_off: motor
+            - light.turn_off: button_led0
 
 select:
   platform: template
@@ -190,10 +252,6 @@ select:
   optimistic: true
   on_value:
     then:
-      # Always reset the timer script
-      - script.stop: script_turn_off_timer
-      - script.execute: script_turn_off_timer
-
       # Make sure the button LED is ON
       - light.turn_on:
           id: button_led0
