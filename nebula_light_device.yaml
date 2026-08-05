@@ -94,16 +94,25 @@ output:
     id: red
     pin: P9
     inverted: true
+    # Driver minimum pulse width, generous margin
+    min_power: 1%
+    zero_means_zero: true
 
   - platform: libretiny_pwm
     id: green
     pin: P24
     inverted: true
+    # Driver minimum pulse width, generous margin
+    min_power: 1%
+    zero_means_zero: true
 
   - platform: libretiny_pwm
     id: blue
     pin: P26
     inverted: true
+    # Driver minimum pulse width, generous margin
+    min_power: 1%
+    zero_means_zero: true
 
   - platform: libretiny_pwm
     id: laser_pwm
